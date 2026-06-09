@@ -150,8 +150,8 @@ export async function sendPlotProgression(type) {
             quietToLoud: true
         };
 
-        // Call Generate with 'continue' type and our custom prompt
-        await Generate('continue', options);
+        // Call Generate with 'normal' type and our custom prompt
+        await Generate('normal', options);
 
         // console.log('[RPG Companion] Plot progression generation triggered');
     } catch (error) {
