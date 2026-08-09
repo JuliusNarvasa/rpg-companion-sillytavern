@@ -749,6 +749,7 @@ function renderEditorUI() {
     renderInfoBoxTab();
     renderPresentCharactersTab();
     renderHistoryPersistenceTab();
+    renderPromptInjectionTab();
 }
 
 /**
@@ -1741,5 +1742,51 @@ function setupHistoryPersistenceListeners() {
     // Thoughts
     $('#rpg-history-thoughts').off('change').on('change', function () {
         extensionSettings.trackerConfig.presentCharacters.thoughts.persistInHistory = $(this).is(':checked');
+    });
+}
+
+/**
+ * Render Prompt Injection configuration tab
+ * Provides a master switch that, when disabled, prevents RPG Companion
+ * from injecting ANY data into the main generation prompt.
+ */
+function renderPromptInjectionTab() {
+    if (extensionSettings.injectIntoMainPrompt === undefined) {
+        extensionSettings.injectIntoMainPrompt = true;
+    }
+
+    let html = '<div class="rpg-editor-section">';
+
+    html += `<h4><i class="fa-solid fa-paper-plane"></i> ${i18n.getTranslation('promptInjection.title') || 'Prompt Injection'}</h4>`;
+    html += `<p class="rpg-editor-hint">${i18n.getTranslation('promptInjection.hint') || 'Master switch that controls whether RPG Companion injects anything into the main generation prompt.'}</p>`;
+
+    // Master toggle
+    html += '<div class="rpg-editor-toggle-row">';
+    html += `<input type="checkbox" id="rpg-inject-into-main-prompt" ${extensionSettings.injectIntoMainPrompt ? 'checked' : ''}>`;
+    html += `<label for="rpg-inject-into-main-prompt">${i18n.getTranslation('promptInjection.injectIntoMainPrompt') || 'Send RPG Companion context to main prompt'}</label>`;
+    html += '</div>';
+    html += `<p class="rpg-editor-hint" style="margin-top: 4px; margin-left: 24px;">${i18n.getTranslation('promptInjection.injectIntoMainPromptHint') || 'When enabled, RPG Companion injects its various prompts into the main roleplay generation. When disabled, nothing from this extension is added to the main prompt.'}</p>`;
+
+    // Warning callout
+    html += `<div class="rpg-editor-hint" style="margin-top: 16px; padding: 8px 12px; border-left: 3px solid #e94560; background: rgba(233, 69, 96, 0.08);">`;
+    html += `<i class="fa-solid fa-triangle-exclamation" style="margin-right: 6px; color: #e94560;"></i>`;
+    html += `${i18n.getTranslation('promptInjection.warning') || 'Disabling this turns off every RPG Companion prompt injection. Trackers, swipes, presets, and refresh still work, but nothing from this extension will be added to the main generation prompt.'}`;
+    html += `</div>`;
+
+    html += '</div>';
+
+    $('#rpg-editor-tab-promptInjection').html(html);
+
+    setupPromptInjectionListeners();
+}
+
+/**
+ * Set up event listeners for the Prompt Injection tab
+ */
+function setupPromptInjectionListeners() {
+    $('#rpg-inject-into-main-prompt').off('change').on('change', function () {
+        extensionSettings.injectIntoMainPrompt = $(this).is(':checked');
+        // Re-render the editor UI to apply any immediate visual effect (and
+        // because the existing settings toggles do not save until "Save & Apply").
     });
 }

@@ -21,7 +21,7 @@ Moving on to developing the Marinara Engine frontend, the extension will now be 
 
 3. Go to Install extension
 
-4. Copy-paste this link: <https://github.com/SpicyMarinara/rpg-companion-sillytavern>
+4. Copy-paste this link: <https://github.com/JuliusNarvasa/rpg-companion-sillytavern>
 
 5. Press Install for all users/Install just for me
 

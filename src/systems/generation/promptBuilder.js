@@ -1239,7 +1239,12 @@ export async function generateSeparateUpdatePrompt() {
     // Key: message index in recentMessages, Value: context string
     const contextInjectionMap = new Map();
 
-    if (historyPersistence?.enabled) {
+    // Master prompt-injection switch: when disabled, do not inject historical
+    // tracker context into the separate-mode tracker-update prompt either.
+    // Skipping here keeps behavior consistent with the main-prompt gate.
+    const injectIntoMainPrompt = extensionSettings.injectIntoMainPrompt !== false;
+
+    if (injectIntoMainPrompt && historyPersistence?.enabled) {
         // Find the last assistant message index (in recentMessages)
         let lastAssistantIdx = -1;
         for (let i = recentMessages.length - 1; i >= 0; i--) {

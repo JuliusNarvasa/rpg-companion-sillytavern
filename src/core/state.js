@@ -66,6 +66,7 @@ export let extensionSettings = {
         contextPreamble: '', // Optional custom preamble text (empty = use default short one)
         sendAllEnabledOnRefresh: false // If true, sends all enabled stats from preset instead of only persistInHistory-enabled stats on Refresh RPG Info
     },
+    injectIntoMainPrompt: true, // Master switch: when false, RPG Companion injects NOTHING into the main generation prompt (historical context, current state, HTML, dialogue, deception, omniscience, Spotify, CYOA, example/instruction messages)
     panelPosition: 'right', // 'left', 'right', or 'top'
     theme: 'default', // Theme: default, sci-fi, fantasy, cyberpunk, custom
     customColors: {
