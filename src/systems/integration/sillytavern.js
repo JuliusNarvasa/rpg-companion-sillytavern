@@ -43,7 +43,7 @@ import { parseResponse, parseUserStats } from '../generation/parser.js';
 import { parseAndStoreSpotifyUrl, convertToEmbedUrl } from '../features/musicPlayer.js';
 import { updateRPGData } from '../generation/apiClient.js';
 import { removeLocks } from '../generation/lockManager.js';
-import { onGenerationStarted, initHistoryInjectionListeners } from '../generation/injector.js';
+import { onGenerationStarted, initHistoryInjectionListeners, clearPendingContextMap } from '../generation/injector.js';
 
 // Rendering
 import { renderUserStats } from '../rendering/userStats.js';
@@ -728,6 +728,11 @@ export function onMessageSwiped(messageIndex) {
         // Immediately commit context from the prior assistant message (N-1) so generation
         // uses the world state before this message, not the last-viewed sibling swipe.
         commitTrackerDataFromPriorMessage(messageIndex);
+        // Discard any historical-context data built for the previous generation /
+        // previous swipe — otherwise the next prompt would carry <context> blocks
+        // anchored to the old swipe_id and inject the previous swipe's history into
+        // the new swipe. The map is repopulated fresh in onGenerationStarted.
+        clearPendingContextMap();
         // console.log('[RPG Companion] 🔵 NEW swipe detected - Set lastActionWasSwipe = true');
     } else {
         // This is navigating to an EXISTING swipe - don't change the flag

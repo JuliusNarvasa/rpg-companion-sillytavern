@@ -35,6 +35,23 @@ import { commitTrackerDataFromPriorMessage } from '../../core/persistence.js';
 // Track suppression state for event handler
 let currentSuppressionState = false;
 
+/**
+ * Master switch for prompt injection into the main generation.
+ *
+ * Returns false when the user has turned off "Send RPG Companion context to
+ * main prompt" in the Prompt Injection settings tab. Every code path that
+ * would otherwise call setExtensionPrompt(...) or mutate the chat array to
+ * append tracker data MUST consult this guard first so that turning the
+ * master switch off produces a 100% silent extension from the main prompt's
+ * perspective.
+ *
+ * Tracker updates, swipe persistence, and preset logic remain untouched —
+ * only prompt injection is gated here.
+ */
+function shouldInjectIntoMainPrompt() {
+    return extensionSettings.injectIntoMainPrompt !== false;
+}
+
 // Type imports
 /** @typedef {import('../../types/inventory.js').InventoryV2} InventoryV2 */
 
@@ -44,6 +61,18 @@ let lastCommittedUserMessageSignature = null;
 
 // Store context map for prompt injection (used by event handlers)
 let pendingContextMap = new Map();
+
+/**
+ * Exported so other modules (swipe handler, message deleted, etc.) can
+ * invalidate stale historical-context data. Use this whenever the user
+ * navigates to a different swipe / deletes messages / changes settings
+ * mid-generation — leaving the map populated will leak the previous
+ * generation's <context> blocks into the next prompt.
+ */
+export function clearPendingContextMap() {
+    pendingContextMap = new Map();
+    historyInjectionDone = false;
+}
 
 // Flag to track if injection already happened in BEFORE_COMBINE
 let historyInjectionDone = false;
@@ -463,6 +492,11 @@ function onGenerateBeforeCombinePrompts(eventData) {
         return;
     }
 
+    // Master switch: if disabled, do not inject historical context into the prompt
+    if (!shouldInjectIntoMainPrompt()) {
+        return;
+    }
+
     // Skip for OpenAI (uses chat completion)
     if (eventData.api === 'openai') {
         return;
@@ -496,6 +530,11 @@ function onGenerateAfterCombinePrompts(eventData) {
         return;
     }
 
+    // Master switch: if disabled, do not inject historical context into the prompt
+    if (!shouldInjectIntoMainPrompt()) {
+        return;
+    }
+
     let didInjectHistory = false;
 
     // Inject historical context if available and not already done
@@ -524,6 +563,11 @@ function onChatCompletionPromptReady(eventData) {
     }
 
     if (eventData.dryRun) {
+        return;
+    }
+
+    // Master switch: if disabled, do not inject historical context into the chat-completion prompt
+    if (!shouldInjectIntoMainPrompt()) {
         return;
     }
 
@@ -567,6 +611,26 @@ export async function onGenerationStarted(type, data, dryRun) {
     // Skip tracker injection for image generation requests
     if (data?.quietImage || data?.quiet_image || data?.isImageGeneration) {
         // console.log('[RPG Companion] Detected image generation, skipping tracker injection');
+        return;
+    }
+
+    // Master prompt-injection switch: if the user has disabled
+    // "Send RPG Companion context to main prompt" in settings, clear every
+    // RPG Companion extension prompt and the pending context map, then bail.
+    // Trackers / swipes / presets continue to function normally — only the
+    // main-prompt injection is silenced.
+    if (!shouldInjectIntoMainPrompt()) {
+        pendingContextMap = new Map();
+        historyInjectionDone = false;
+        setExtensionPrompt('rpg-companion-inject', '', extension_prompt_types.IN_CHAT, 0, false);
+        setExtensionPrompt('rpg-companion-example', '', extension_prompt_types.IN_CHAT, 0, false);
+        setExtensionPrompt('rpg-companion-html', '', extension_prompt_types.IN_CHAT, 0, false);
+        setExtensionPrompt('rpg-companion-dialogue-coloring', '', extension_prompt_types.IN_CHAT, 0, false);
+        setExtensionPrompt('rpg-companion-deception', '', extension_prompt_types.IN_CHAT, 0, false);
+        setExtensionPrompt('rpg-companion-omniscience', '', extension_prompt_types.IN_CHAT, 0, false);
+        setExtensionPrompt('rpg-companion-spotify', '', extension_prompt_types.IN_CHAT, 0, false);
+        setExtensionPrompt('rpg-companion-zzz-cyoa', '', extension_prompt_types.IN_CHAT, 0, false);
+        setExtensionPrompt('rpg-companion-context', '', extension_prompt_types.IN_CHAT, 1, false);
         return;
     }
 

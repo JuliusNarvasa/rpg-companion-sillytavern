@@ -632,6 +632,12 @@ export function loadSettings() {
                 settingsChanged = true;
             }
 
+            // Master prompt-injection switch — additive, defaults to true (preserve current behavior)
+            if (extensionSettings.injectIntoMainPrompt === undefined) {
+                extensionSettings.injectIntoMainPrompt = true;
+                settingsChanged = true;
+            }
+
             // Save migrated settings
             if (settingsChanged) {
                 saveSettings();

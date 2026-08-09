@@ -49,6 +49,7 @@ export const defaultSettings = {
     skipInjectionsForGuided: 'none',
     enablePlotButtons: true, // Show plot progression buttons above chat input
     saveTrackerHistory: false, // Save tracker data in chat history for each message
+    injectIntoMainPrompt: true, // Master switch: when false, RPG Companion injects NOTHING into the main generation prompt
     panelPosition: 'right', // 'left', 'right', or 'top'
     theme: 'default', // Theme: default, sci-fi, fantasy, cyberpunk, custom
     customColors: {
